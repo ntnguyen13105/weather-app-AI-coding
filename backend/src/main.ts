@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module.js';
 import { configureApp } from './configure-app.js';
 
-const app = await NestFactory.create(AppModule);
+const app = await NestFactory.create(AppModule, { bodyParser: false });
 configureApp(app);
 app.enableShutdownHooks();
 const config = app.get(ConfigService);
