@@ -1,6 +1,6 @@
 # REST API contract v1
 
-Trạng thái: thiết kế, chưa triển khai. Base `/api/v1`, JSON UTF-8; timestamp ISO 8601 UTC; field camelCase; enum UPPER_SNAKE_CASE (đơn vị C/F). Schema ký hiệu `?` là optional input; `| null` là trường output luôn xuất hiện nhưng có thể thiếu giá trị. Trường output khác đều bắt buộc.
+Trạng thái: contract thiết kế. Giai đoạn 3 mới triển khai GET `/health/live`, GET `/health/ready`, envelope lỗi health/404 và Swagger cho hai route này. Những endpoint/kiểm soát nghiệp vụ khác chưa triển khai. Base `/api/v1`, JSON UTF-8; timestamp ISO 8601 UTC; field camelCase; enum UPPER_SNAKE_CASE (đơn vị C/F). Schema ký hiệu `?` là optional input; `| null` là trường output luôn xuất hiện nhưng có thể thiếu giá trị. Trường output khác đều bắt buộc.
 
 ## 1. Envelope, validation và errors
 
@@ -152,7 +152,7 @@ POST history luôn 200 vì nghiệp vụ “ghi nhận lần chọn”, cả t�
 | GET /health/live | public | 200 `{status:"ok"}` | Tiến trình không đáp ứng |
 | GET /health/ready | public | 200 `{status:"ready"}` nếu DB SELECT1 trong2s | 503 DATABASE_UNAVAILABLE |
 
-Vẫn dùng envelope như các route khác. Health không gọi weather để tránh tiêu quota. Swagger UI dự kiến `/api/docs`, JSON `/api/docs-json` (không phải nghiệp vụ versioned); mặc định bật development, production tắt hoặc bảo vệ. Giai đoạn4 sinh từ DTO/decorator, so với contract này; hiện chưa có Swagger chạy được.
+Vẫn dùng envelope như các route khác. Health không gọi weather để tránh tiêu quota. Swagger UI `/api/docs`, JSON `/api/docs-json` (không phải nghiệp vụ versioned); bật khi NODE_ENV=development, tắt ở môi trường khác. Swagger đã chạy và phản ánh đúng hai health endpoint trong Giai đoạn 3; Giai đoạn 4 sẽ mở rộng tài liệu cho nghiệp vụ.
 
 ## 7. Rate limit và retry
 

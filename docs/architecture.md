@@ -1,6 +1,6 @@
 # Thiết kế kiến trúc và dữ liệu
 
-Ngày: 24/10/2026. Trạng thái: thiết kế Giai đoạn 2; chưa triển khai. Phạm vi và các mặc định đã được người dùng xác nhận trong chat. Chi tiết kỹ thuật dưới đây là baseline cho triển khai.
+Ngày: 24/10/2026. Baseline thiết kế Giai đoạn 2, đã cập nhật lựa chọn PostgreSQL 18 được người dùng xác nhận trong Giai đoạn 3. Hiện đã có frontend khởi tạo, backend health, Prisma schema/client và cấu hình local; nghiệp vụ trong tài liệu này vẫn là thiết kế chưa triển khai. Xem [báo cáo Giai đoạn 3](phase-3.md) để phân biệt phần đã kiểm tra thực tế.
 
 ## 1. Phạm vi và quyết định kiến trúc
 
@@ -20,16 +20,16 @@ Ngoài MVP: quên mật khẩu, xác minh email, OAuth, quản trị, thông bá
 
 | Thành phần | Dòng phiên bản |
 | --- | --- |
-| Node.js | 24 LTS; đề xuất cập nhật 24.22.1 |
-| npm | 11.x |
-| React / React DOM | 19.3.x, cùng phiên bản |
-| Vite / React Router | 8.x / 7.x (SPA declarative mode) |
-| NestJS / TypeScript backend | 12.x / 6.x, ESM |
-| Prisma CLI / Client / PostgreSQL adapter | 7.x, khóa đồng bộ |
-| PostgreSQL | 17.x |
-| Docker Compose | v2 |
+| Node.js | 24.21.0 đã kiểm tra; cập nhật bản vá LTS trước public launch |
+| npm | 11.19.0 |
+| React / React DOM | 19.3.1, cùng phiên bản |
+| Vite / React Router | 8.3.5 / 7.18.4 (SPA declarative mode) |
+| NestJS / TypeScript backend | 12.2.0 / 6.0.3, ESM |
+| Prisma CLI / Client / PostgreSQL adapter | 7.10.1, khóa đồng bộ |
+| PostgreSQL | 18.6 local, người dùng đồng ý đổi từ 17 |
+| Docker Compose | Dự kiến v2 ở Giai đoạn 7; chưa cài/chạy |
 
-Chưa khóa patch hoặc xác minh build. Giai đoạn 3 kiểm tra registry/peer dependencies, dùng ESLint và Prettier theo yêu cầu dù scaffold có thể dùng công cụ khác; ghi phiên bản chính xác vào package-lock của từng ứng dụng. Frontend không đổi sang TypeScript.
+Đã khóa patch và xác minh build trong Giai đoạn 3. ESLint 10.13.0, Prettier 3.9.10; dependency và allowScripts được ghi trong package.json/package-lock từng ứng dụng. Frontend vẫn JavaScript. Multer được override sang 2.5.0 để xử lý advisory của dependency Nest; không dùng upload trong MVP. Không nâng Prisma sang bản major RC do thông báo CLI gợi ý.
 
 Nguồn đã đọc Giai đoạn 1: [Node LTS](https://nodejs.org/en/blog/release/v24.22.1), [Vite](https://vite.dev/guide/), [Nest migration](https://docs.nestjs.com/migration-guide), [React](https://react.dev/versions), [Router 7](https://reactrouter.com/7.9.6/upgrading/v6), [Prisma 7 requirements](https://www.prisma.io/docs/orm/v7/reference/system-requirements), [database hỗ trợ](https://www.prisma.io/docs/orm/v7/reference/supported-databases). Phiên bản phải được kiểm tra lại lúc cài, không lấy `latest` tùy tiện.
 
@@ -63,7 +63,7 @@ GET weather không có tác dụng ghi DB. POST history chỉ gọi sau hành đ
 
 ## 4. Cấu trúc thư mục dự kiến
 
-Chỉ các file Markdown bàn giao hiện tồn tại. Cây sau là mục tiêu, không phải danh sách đã tạo:
+Cây sau là cấu trúc mục tiêu, không phải danh sách đã tạo đầy đủ. Giai đoạn 3 chỉ tạo phần bootstrap và health; các thư mục nghiệp vụ sẽ được thêm khi triển khai:
 
 ```text
 weatherApp/
@@ -234,7 +234,7 @@ Liveness không phụ thuộc OpenWeather/DB; readiness kiểm tra DB với time
 | Giai đoạn | Điều kiện hoàn tất |
 | --- | --- |
 | 2 | Có ERD, contract mọi route, auth/CSRF, wireframe, giới hạn API và checklist; rà tính nhất quán tài liệu |
-| 3 | Package versions khóa; lint/build skeleton đạt; DB kết nối được; validate env; Docker được kiểm tra |
+| 3 | Package versions khóa; lint/build skeleton đạt; DB local PostgreSQL 18 kết nối được; validate env. Docker chuyển sang Giai đoạn 7 theo lựa chọn dùng PostgreSQL local |
 | 4 | Migration DB trống đạt; unit/API integration bằng PostgreSQL thật; Swagger; live smoke test key Free; mock timeout/429/payload hỏng |
 | 5 | Luồng UI tích hợp, biểu đồ/đơn vị đồng bộ, trạng thái lỗi và bàn phím; viewport 360/768/1440 |
 | 6 | E2E đăng ký → tìm → lưu → lịch sử → logout; hai tài khoản cách ly; DB/upstream down; concurrent mutations; CSRF/session |
