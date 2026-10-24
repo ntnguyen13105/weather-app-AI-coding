@@ -5,6 +5,8 @@ import { validateEnvironment } from './config/environment.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { FavoritesModule } from './modules/favorites/favorites.module.js';
+import { SearchHistoryModule } from './modules/search-history/search-history.module.js';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { UsersModule } from './modules/users/users.module.js';
     HealthModule,
     AuthModule,
     UsersModule,
+    FavoritesModule,
+    SearchHistoryModule,
   ],
 })
 export class AppModule {}
