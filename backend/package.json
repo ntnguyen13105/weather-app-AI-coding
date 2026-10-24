@@ -1,0 +1,63 @@
+{
+  "name": "weather-app-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "npm": ">=11 <12"
+  },
+  "scripts": {
+    "predev": "npm run prisma:generate",
+    "dev": "nest start --watch",
+    "build": "npm run prisma:generate && nest build",
+    "start": "node dist/main.js",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --ignore-path ../.prettierignore --write .",
+    "format:check": "prettier --ignore-path ../.prettierignore --check .",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "test": "npm run build && vitest run",
+    "db:check": "npm run build && node dist/prisma/check-connection.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.2.0",
+    "@nestjs/config": "12.0.1",
+    "@nestjs/core": "12.2.0",
+    "@nestjs/platform-express": "12.2.0",
+    "@nestjs/swagger": "12.0.3",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "dotenv": "18.0.9",
+    "helmet": "8.3.0",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@nestjs/cli": "12.0.10",
+    "@nestjs/testing": "12.2.0",
+    "@types/express": "5.0.6",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/supertest": "7.2.1",
+    "eslint": "10.13.0",
+    "prettier": "3.9.10",
+    "prisma": "7.10.1",
+    "supertest": "7.3.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  },
+  "overrides": {
+    "multer": "2.5.0"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "@scarf/scarf": false
+  }
+}

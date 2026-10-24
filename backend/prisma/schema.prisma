@@ -1,0 +1,72 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TemperatureUnit {
+  C
+  F
+}
+
+model User {
+  id                       String          @id @default(uuid()) @db.Uuid
+  email                    String          @unique @db.VarChar(254)
+  passwordHash             String
+  displayName              String          @db.VarChar(80)
+  preferredTemperatureUnit TemperatureUnit @default(C)
+  createdAt                DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime        @updatedAt @db.Timestamptz(3)
+  favorites                Favorite[]
+  searchHistory            SearchHistory[]
+  sessions                 Session[]
+}
+
+model Favorite {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationKey String   @db.VarChar(64)
+  name        String   @db.VarChar(160)
+  country     String   @db.Char(2)
+  state       String?  @db.VarChar(160)
+  latitude    Decimal  @db.Decimal(7, 4)
+  longitude   Decimal  @db.Decimal(7, 4)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([userId, locationKey])
+  @@index([userId, createdAt, id])
+}
+
+model SearchHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationKey String   @db.VarChar(64)
+  name        String   @db.VarChar(160)
+  country     String   @db.Char(2)
+  state       String?  @db.VarChar(160)
+  latitude    Decimal  @db.Decimal(7, 4)
+  longitude   Decimal  @db.Decimal(7, 4)
+  searchedAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([userId, locationKey])
+  @@index([userId, searchedAt, id])
+}
+
+model Session {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String    @unique @db.Char(64)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt        DateTime  @db.Timestamptz(3)
+  revokedAt        DateTime? @db.Timestamptz(3)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
