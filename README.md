@@ -2,13 +2,13 @@
 
 Ứng dụng thời tiết tiếng Việt dùng React/JavaScript, NestJS/TypeScript, Prisma và PostgreSQL, phát triển theo từng giai đoạn để học và làm portfolio.
 
-**Trạng thái ngày 25/10/2026: hoàn thành backend Giai đoạn 4.** API đã có xác thực, hồ sơ, yêu thích, lịch sử và thời tiết OpenWeather thật. Frontend vẫn là trang kiểm tra kết nối Giai đoạn 3; dashboard và các màn hình nghiệp vụ thuộc Giai đoạn 5. Không có số liệu thời tiết demo.
+**Trạng thái ngày 25/10/2026: đã triển khai frontend Giai đoạn 5.** Dashboard tiếng Việt kết nối NestJS, PostgreSQL và OpenWeather thật; có tìm kiếm, dự báo, đổi đơn vị, tài khoản, yêu thích và lịch sử. Không có số liệu thời tiết demo. Kiểm thử tích hợp mở rộng và đóng gói triển khai còn thuộc Giai đoạn 6–7.
 
-![Trang kiểm tra kết nối Giai đoạn 3](docs/screenshots/phase-3-connection.png)
+![Dashboard với dữ liệu OpenWeather thật](docs/screenshots/phase-5-1440.png)
 
 ## Những gì đã có
 
-- Frontend React + Vite + React Router, JavaScript/JSX, trang kiểm tra kết nối tiếng Việt và route không tồn tại.
+- Frontend React + Vite + React Router, JavaScript/JSX: dashboard responsive, tìm kiếm debounce và bàn phím, biểu đồ dự báo, tài khoản và route không tồn tại.
 - Backend NestJS chia Auth/Users/Weather/Favorites/SearchHistory/Health; Swagger cho 21 thao tác, DTO validation, envelope thống nhất, Helmet, giới hạn body và rate limiting.
 - Đăng ký/đăng nhập/refresh/logout, hồ sơ, đổi mật khẩu; Argon2id, JWT 15 phút, session PostgreSQL tối đa 7 ngày, cookie HttpOnly và CSRF gắn phiên.
 - OpenWeather Free: tìm địa điểm, thời tiết hiện tại, dự báo 5 ngày/mốc 3 giờ, cache và timeout. Cảnh báo trả `UNSUPPORTED`.
@@ -84,7 +84,7 @@ npm --prefix .\frontend run dev
 
 - Giao diện: [http://127.0.0.1:5173](http://127.0.0.1:5173).
 - Swagger cùng origin: [http://127.0.0.1:5173/api/docs/](http://127.0.0.1:5173/api/docs/). Khi thử mutation, dùng trang này để Origin khớp APP_ORIGIN; lấy CSRF qua `/auth/csrf`, copy `data.csrfToken` vào header của thao tác cần chạy. Sau login/refresh dùng CSRF mới trả về.
-- Nhấn **Kiểm tra kết nối**; kết quả mong đợi: “React đã kết nối NestJS. PostgreSQL đã sẵn sàng.”
+- Tìm “Hà Nội”, chọn kết quả; dashboard hiển thị thời tiết hiện tại và dự báo. Đăng ký tài khoản để lưu địa điểm và lịch sử.
 
 Backend đọc `.env` ở gốc. Vite proxy `/api` theo BACKEND_URL; không đưa DATABASE_URL hoặc secret vào biến `VITE_*`. JWT/CSRF secret bắt buộc ở mọi môi trường. Local thiếu OpenWeather key vẫn chạy auth/health, nhưng weather trả 503; production yêu cầu cả key và APP_ORIGIN HTTPS. Chưa triển khai public hoặc cấu hình cloud/Docker.
 
@@ -106,9 +106,10 @@ npm --prefix .\backend run db:check
 npm --prefix .\frontend run lint
 npm --prefix .\frontend run format:check
 npm --prefix .\frontend run build
+npm --prefix .\frontend test
 ```
 
-`backend test` tự build rồi chạy 38 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Chưa có bộ test frontend tự động; phần đó thuộc Giai đoạn 5.
+`backend test` tự build rồi chạy 38 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Frontend có 11 test Vitest/Testing Library và 2 test Playwright trên Chrome; xem điều kiện chạy ở [Giai đoạn 5](docs/phase-5.md).
 
 Kiểm tra tùy chọn với OpenWeather thật (tốn 3 request Free; không tự chạy trong unit test):
 
@@ -123,18 +124,19 @@ Invoke-RestMethod 'http://127.0.0.1:5173/api/v1/health/live'
 Invoke-RestMethod 'http://127.0.0.1:5173/api/v1/health/ready'
 ```
 
-Khi PostgreSQL ngừng chạy: live vẫn 200, ready trả 503 với `DATABASE_UNAVAILABLE`; frontend hiển thị lỗi và cho thử lại. Khởi động lại database rồi kiểm tra phải phục hồi 200.
+Khi PostgreSQL ngừng chạy: live vẫn 200, ready trả 503 với `DATABASE_UNAVAILABLE`. Khởi động lại database rồi kiểm tra phải phục hồi 200. Kiểm thử giao diện khi chủ động tắt dịch vụ sẽ thực hiện trong Giai đoạn 6.
 
 ## Phạm vi sản phẩm đã chốt
 
-OpenWeather **Free**: thời tiết hiện tại, tìm kiếm geocoding và dự báo 5 ngày theo mốc 3 giờ. Backend đã triển khai phạm vi này; key đã xác minh ngày 25/10/2026. Dự báo có thể chạm 6 ngày lịch với ngày đầu/cuối thiếu mốc. Khách được đọc weather API; người đăng nhập có dữ liệu riêng và tùy chọn C/F. API luôn trả Celsius gốc; chuyển đổi đồng bộ trên giao diện sẽ làm ở Giai đoạn 5. Cảnh báo trả nguồn chưa hỗ trợ, không giả là “không có cảnh báo”.
+OpenWeather **Free**: thời tiết hiện tại, tìm kiếm geocoding và dự báo 5 ngày theo mốc 3 giờ. Backend đã triển khai phạm vi này; key đã xác minh ngày 25/10/2026. Dự báo có thể chạm 6 ngày lịch với ngày đầu/cuối thiếu mốc. Khách được đọc weather API; người đăng nhập có dữ liệu riêng và tùy chọn C/F. API luôn trả Celsius gốc; giao diện chuyển đổi đồng bộ từ giá trị gốc. Cảnh báo hiển thị nguồn chưa hỗ trợ, không giả là “không có cảnh báo”.
 
 ## Tài liệu và bước tiếp theo
 
 - [Báo cáo Giai đoạn 3, lỗi thường gặp và bằng chứng kiểm tra](docs/phase-3.md).
 - [Báo cáo Giai đoạn 4, lệnh kiểm thử và giới hạn](docs/phase-4.md).
+- [Báo cáo Giai đoạn 5, kiểm thử giao diện và ảnh chụp](docs/phase-5.md).
 - [Kiến trúc và ERD](docs/architecture.md).
 - [API contract](docs/api-contract.md) — request/response, CSRF, pagination và lỗi.
 - [Wireframe và quy tắc giao diện](docs/ui-design.md) — dashboard thuộc Giai đoạn 5.
 
-Git local dùng `main`, `develop`, `feature/*`; backend ở `feature/backend`, kế thừa `feature/project-setup`. Chưa tạo GitHub remote hoặc push. Giai đoạn 5 tiếp theo: dashboard tiếng Việt và tích hợp các luồng tài khoản/thời tiết. Docker, hướng dẫn cloud và CONTRIBUTING đầy đủ sẽ hoàn thiện ở Giai đoạn 7.
+Git local dùng `main`, `develop`, `feature/*`; frontend ở `feature/frontend`, kế thừa `feature/backend`. Chưa tạo GitHub remote hoặc push. Bước tiếp theo là Giai đoạn 6: kiểm thử tích hợp mở rộng, lỗi phụ thuộc và bảo mật/hiệu năng cơ bản. Docker, hướng dẫn cloud và CONTRIBUTING đầy đủ sẽ hoàn thiện ở Giai đoạn 7.
