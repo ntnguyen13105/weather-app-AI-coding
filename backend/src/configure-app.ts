@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { json } from 'express';
 import { configureHttp } from './common/http.js';
+import { describeResponses } from './common/openapi.js';
 
 export function configureApp(app: INestApplication) {
   app.setGlobalPrefix('api/v1');
@@ -41,7 +42,7 @@ export function configureApp(app: INestApplication) {
     SwaggerModule.setup(
       'api/docs',
       app,
-      SwaggerModule.createDocument(app, options),
+      describeResponses(SwaggerModule.createDocument(app, options)),
       { jsonDocumentUrl: 'api/docs-json' },
     );
   }
