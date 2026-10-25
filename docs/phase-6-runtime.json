@@ -1,0 +1,52 @@
+{
+  "measuredAt": "2026-10-25T14:30:53.839Z",
+  "environment": "Chrome headless, local Vite production preview, no CPU/network throttling, fresh context each run",
+  "samples": [
+    {
+      "domContentLoadedMs": 63,
+      "pageReadyMeasuredMs": 168,
+      "resourceTransferBytes": 165901
+    },
+    {
+      "domContentLoadedMs": 62,
+      "pageReadyMeasuredMs": 170,
+      "resourceTransferBytes": 165089
+    },
+    {
+      "domContentLoadedMs": 62,
+      "pageReadyMeasuredMs": 164,
+      "resourceTransferBytes": 165601
+    }
+  ],
+  "checks": [
+    {
+      "javascriptHeapBytes": 5387356
+    },
+    {
+      "width": 1440,
+      "unnamedControls": []
+    },
+    {
+      "width": 320,
+      "unnamedControls": []
+    }
+  ],
+  "contrast": [
+    {
+      "foreground": "#f1f5f8",
+      "background": "#1b3042",
+      "ratio": 12.37
+    },
+    {
+      "foreground": "#b5c6d4",
+      "background": "#1b3042",
+      "ratio": 7.75
+    },
+    {
+      "foreground": "#102637",
+      "background": "#a7e0ed",
+      "ratio": 10.73
+    }
+  ],
+  "limitations": "Only initial guest dashboard controls and three base palette pairs. Not a Lighthouse/WCAG audit, Core Web Vitals field measurement or production HTTPS verification."
+}

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "pretest:e2e": "npm --prefix ../backend run build",
     "test:e2e": "playwright test",
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",

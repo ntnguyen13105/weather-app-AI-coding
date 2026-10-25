@@ -2,12 +2,27 @@ import { test, expect } from '@playwright/test';
 test('real weather, units, keyboard search and responsive layout', async ({
   page,
 }) => {
+  test.setTimeout(120000);
+  // The preceding security/account scenarios can exhaust the unchanged IP
+  // quota. Respect Retry-After once before starting this independent scenario.
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const search = page.getByRole('combobox').first();
+  const response = page.waitForResponse((r) =>
+    r.url().includes('/weather/search?'),
+  );
   await search.fill('Ha Noi');
+  const searchResponse = await response;
+  if (searchResponse.status() === 429) {
+    const seconds = Number(searchResponse.headers()['retry-after']);
+    expect(seconds).toBeGreaterThan(0);
+    expect(seconds).toBeLessThanOrEqual(60);
+    await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+    await page.reload();
+    await search.fill('Ha Noi');
+  } else expect(searchResponse.status()).toBe(200);
   await expect(page.getByRole('option').first()).toBeVisible({
     timeout: 15000,
   });
@@ -41,7 +56,7 @@ test('real weather, units, keyboard search and responsive layout', async ({
       actual: width,
     });
     await page.screenshot({
-      path: `../docs/screenshots/phase-5-${width}.png`,
+      path: `test-results/weather-${width}.png`,
       fullPage: true,
     });
   }

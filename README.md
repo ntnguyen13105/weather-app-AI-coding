@@ -2,7 +2,7 @@
 
 Ứng dụng thời tiết tiếng Việt dùng React/JavaScript, NestJS/TypeScript, Prisma và PostgreSQL, phát triển theo từng giai đoạn để học và làm portfolio.
 
-**Trạng thái ngày 25/10/2026: đã triển khai frontend Giai đoạn 5.** Dashboard tiếng Việt kết nối NestJS, PostgreSQL và OpenWeather thật; có tìm kiếm, dự báo, đổi đơn vị, tài khoản, yêu thích và lịch sử. Không có số liệu thời tiết demo. Kiểm thử tích hợp mở rộng và đóng gói triển khai còn thuộc Giai đoạn 6–7.
+**Trạng thái ngày 25/10/2026: đã triển khai và kiểm thử tích hợp Giai đoạn 6.** Dashboard tiếng Việt kết nối NestJS, PostgreSQL và OpenWeather thật; có tìm kiếm, dự báo, đổi đơn vị, tài khoản, yêu thích và lịch sử. Đã sửa đồng bộ đăng xuất đa tab và tên truy cập liên kết mobile. Không có số liệu thời tiết demo. Đóng gói Docker/cloud và bàn giao cuối thuộc Giai đoạn 7; chưa triển khai production.
 
 ![Dashboard với dữ liệu OpenWeather thật](docs/screenshots/phase-5-1440.png)
 
@@ -109,7 +109,9 @@ npm --prefix .\frontend run build
 npm --prefix .\frontend test
 ```
 
-`backend test` tự build rồi chạy 38 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Frontend có 11 test Vitest/Testing Library và 2 test Playwright trên Chrome; xem điều kiện chạy ở [Giai đoạn 5](docs/phase-5.md).
+`backend test` tự build rồi chạy 38 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Frontend có 12 test Vitest/Testing Library và 5 bài Playwright trên Chrome; xem điều kiện chạy, phân biệt mock/live và giới hạn ở [Giai đoạn 6](docs/phase-6.md).
+
+`npm --prefix .\frontend run test:e2e` tự build backend và bật/tắt server test riêng 3001/5174, giữ nguyên rate limit; cần Chrome, PostgreSQL đang chạy và OpenWeather key hợp lệ. Có thể chờ tối đa một phút theo Retry-After. Muốn kiểm tra dừng/khởi động lại database thật, xem cờ `PHASE6_DB_OUTAGE` trong báo cáo Giai đoạn 6.
 
 Kiểm tra tùy chọn với OpenWeather thật (tốn 3 request Free; không tự chạy trong unit test):
 
@@ -124,7 +126,7 @@ Invoke-RestMethod 'http://127.0.0.1:5173/api/v1/health/live'
 Invoke-RestMethod 'http://127.0.0.1:5173/api/v1/health/ready'
 ```
 
-Khi PostgreSQL ngừng chạy: live vẫn 200, ready trả 503 với `DATABASE_UNAVAILABLE`. Khởi động lại database rồi kiểm tra phải phục hồi 200. Kiểm thử giao diện khi chủ động tắt dịch vụ sẽ thực hiện trong Giai đoạn 6.
+Khi PostgreSQL ngừng chạy: live vẫn 200, ready trả 503 với `DATABASE_UNAVAILABLE`. Đã kiểm thử dừng cluster thật, giao diện báo lỗi dịch vụ và phục hồi tài khoản qua “Thử lại” sau khi khởi động lại database.
 
 ## Phạm vi sản phẩm đã chốt
 
@@ -135,8 +137,9 @@ OpenWeather **Free**: thời tiết hiện tại, tìm kiếm geocoding và dự
 - [Báo cáo Giai đoạn 3, lỗi thường gặp và bằng chứng kiểm tra](docs/phase-3.md).
 - [Báo cáo Giai đoạn 4, lệnh kiểm thử và giới hạn](docs/phase-4.md).
 - [Báo cáo Giai đoạn 5, kiểm thử giao diện và ảnh chụp](docs/phase-5.md).
+- [Báo cáo Giai đoạn 6, lỗi đã sửa và giới hạn nghiệm thu](docs/phase-6.md).
 - [Kiến trúc và ERD](docs/architecture.md).
 - [API contract](docs/api-contract.md) — request/response, CSRF, pagination và lỗi.
 - [Wireframe và quy tắc giao diện](docs/ui-design.md) — dashboard thuộc Giai đoạn 5.
 
-Git local dùng `main`, `develop`, `feature/*`; frontend ở `feature/frontend`, kế thừa `feature/backend`. Chưa tạo GitHub remote hoặc push. Bước tiếp theo là Giai đoạn 6: kiểm thử tích hợp mở rộng, lỗi phụ thuộc và bảo mật/hiệu năng cơ bản. Docker, hướng dẫn cloud và CONTRIBUTING đầy đủ sẽ hoàn thiện ở Giai đoạn 7.
+Git local dùng `main`, `develop`, `feature/*`; Giai đoạn 6 ở `feature/integration-testing`, kế thừa `feature/frontend`. Chưa tạo GitHub remote hoặc push. Bước tiếp theo là Giai đoạn 7: Docker, hướng dẫn cloud, CONTRIBUTING và checklist bàn giao.
