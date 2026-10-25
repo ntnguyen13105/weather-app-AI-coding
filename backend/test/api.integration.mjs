@@ -18,7 +18,7 @@ if (!url || new URL(url).pathname !== '/weather_app_test')
   );
 const origin = 'http://localhost:5173';
 describe('HTTP + PostgreSQL integration', () => {
-  let app, db, a, csrf, email, userId;
+  let app, db, a, csrf, email, userId, registeredCookies, registeredCsrf;
   const ids = [];
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -80,6 +80,10 @@ describe('HTTP + PostgreSQL integration', () => {
     userId = r.body.data.user.id;
     ids.push(userId);
     csrf = r.body.data.csrfToken;
+    registeredCsrf = csrf;
+    registeredCookies = r.headers['set-cookie']
+      .map((c) => c.split(';')[0])
+      .join('; ');
     expect(
       r.headers['set-cookie'].every(
         (c) => c.includes('HttpOnly') && c.includes('SameSite=Lax'),
@@ -131,6 +135,13 @@ describe('HTTP + PostgreSQL integration', () => {
     const after = await db.session.findUnique({ where: { id: before.id } });
     expect(after.refreshTokenHash).not.toBe(before.refreshTokenHash);
     expect(after.expiresAt).toEqual(before.expiresAt);
+    const replay = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Origin', origin)
+      .set('Cookie', registeredCookies)
+      .set('X-CSRF-Token', registeredCsrf)
+      .expect(401);
+    expect(replay.body.error.code).toBe('REFRESH_INVALID');
   });
   it('changes password, revokes all sessions and requires the new password', async () => {
     await a
@@ -152,6 +163,10 @@ describe('HTTP + PostgreSQL integration', () => {
     expect(await db.session.count({ where: { userId, revokedAt: null } })).toBe(
       0,
     );
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Cookie', registeredCookies)
+      .expect(401);
     csrf = (await a.get('/api/v1/auth/csrf')).body.data.csrfToken;
     await a
       .post('/api/v1/auth/login')
@@ -172,5 +187,45 @@ describe('HTTP + PostgreSQL integration', () => {
       .set('X-CSRF-Token', csrf)
       .expect(204);
     await a.get('/api/v1/auth/me').expect(401);
+  });
+  it('allows only one concurrent refresh using the same token', async () => {
+    csrf = (await a.get('/api/v1/auth/csrf')).body.data.csrfToken;
+    const login = await a
+      .post('/api/v1/auth/login')
+      .set('Origin', origin)
+      .set('X-CSRF-Token', csrf)
+      .send({ email, password: 'next-password-123' })
+      .expect(200);
+    const cookies = login.headers['set-cookie']
+      .map((c) => c.split(';')[0])
+      .join('; ');
+    const refresh = () =>
+      request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Origin', origin)
+        .set('Cookie', cookies)
+        .set('X-CSRF-Token', login.body.data.csrfToken);
+    const results = await Promise.all([refresh(), refresh()]);
+    expect(results.map((r) => r.status).sort()).toEqual([200, 401]);
+  });
+  it('limits repeated login attempts and returns Retry-After', async () => {
+    const guest = request.agent(app.getHttpServer());
+    const token = (await guest.get('/api/v1/auth/csrf')).body.data.csrfToken;
+    let last;
+    for (let i = 0; i < 6; i++)
+      last = await guest
+        .post('/api/v1/auth/login')
+        .set('Origin', origin)
+        .set('X-CSRF-Token', token)
+        .send({ email: 'missing@example.com', password: 'invalid' });
+    expect(last.status).toBe(429);
+    expect(Number(last.headers['retry-after'])).toBeGreaterThan(0);
+    const mixedCase = await guest
+      .post('/API/V1/AUTH/LOGIN/')
+      .set('Origin', origin)
+      .set('X-CSRF-Token', token)
+      .set('X-Forwarded-For', '198.51.100.50')
+      .send({ email: 'missing@example.com', password: 'invalid' });
+    expect(mixedCase.status).toBe(429);
   });
 });

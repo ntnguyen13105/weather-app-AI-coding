@@ -20,7 +20,8 @@ export class SecurityGuard implements CanActivate {
   ) {}
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest<Request>();
-    const path = req.path.replace(/\/$/, '');
+    // Express routes are case-insensitive by default; limiter keys must match that behavior.
+    const path = req.path.toLowerCase().replace(/\/+$/, '');
     if (path.startsWith('/api/v1/health/')) return true;
     const ip = req.ip ?? 'unknown'; // Express trust proxy is off; never trust arbitrary forwarded headers.
     this.limits.check(`global:${ip}`, 120, 60000);

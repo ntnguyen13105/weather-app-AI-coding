@@ -82,15 +82,19 @@ export function validateEnvironment(
   } catch {
     invalid.add('APP_ORIGIN');
   }
-  if (!config.HOST?.trim()) invalid.add('HOST');
-  if (config.NODE_ENV === 'production') {
-    for (const key of ['JWT_SECRET', 'CSRF_SECRET'] as const) {
-      if (typeof config[key] !== 'string' || config[key].length < 43)
-        invalid.add(key);
-    }
-    if (config.JWT_SECRET === config.CSRF_SECRET) invalid.add('CSRF_SECRET');
-    if (!config.OPENWEATHER_API_KEY?.trim()) invalid.add('OPENWEATHER_API_KEY');
+  if (typeof config.HOST !== 'string' || !config.HOST.trim())
+    invalid.add('HOST');
+  for (const key of ['JWT_SECRET', 'CSRF_SECRET'] as const) {
+    if (typeof config[key] !== 'string' || config[key].length < 43)
+      invalid.add(key);
   }
+  if (config.JWT_SECRET === config.CSRF_SECRET) invalid.add('CSRF_SECRET');
+  if (
+    config.NODE_ENV === 'production' &&
+    (typeof config.OPENWEATHER_API_KEY !== 'string' ||
+      !config.OPENWEATHER_API_KEY.trim())
+  )
+    invalid.add('OPENWEATHER_API_KEY');
   if (invalid.size)
     throw new Error(
       `Cấu hình không hợp lệ: ${[...invalid].join(', ')}. Kiểm tra .env; không gửi secret vào log.`,

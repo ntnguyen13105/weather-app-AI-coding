@@ -5,6 +5,33 @@ import { PasswordService } from '../dist/modules/auth/password.service.js';
 import { TokenService } from '../dist/modules/auth/token.service.js';
 
 describe('Authentication security primitives', () => {
+  it('uses host-only secure cookies in production and clears the same paths', () => {
+    const service = new TokenService(
+      new ConfigService({
+        JWT_SECRET: 'a'.repeat(64),
+        CSRF_SECRET: 'b'.repeat(64),
+        NODE_ENV: 'production',
+      }),
+    );
+    const cookies = [],
+      cleared = [];
+    const res = {
+      cookie: (...args) => cookies.push(args),
+      clearCookie: (...args) => cleared.push(args),
+    };
+    service.setCookie(res, 'access', 'fixture-token', new Date());
+    service.clear(res);
+    expect(cookies[0][0]).toBe('__Host-wa-access');
+    expect(cookies[0][2]).toMatchObject({
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+    expect(cookies[0][2].domain).toBeUndefined();
+    expect(cleared).toHaveLength(3);
+    expect(cleared.every((c) => c[1].secure && c[1].path === '/')).toBe(true);
+  });
   const passwords = new PasswordService();
   const tokens = new TokenService(
     new ConfigService({
