@@ -1,6 +1,6 @@
 # REST API contract v1
 
-Trạng thái: contract thiết kế. Giai đoạn 3 mới triển khai GET `/health/live`, GET `/health/ready`, envelope lỗi health/404 và Swagger cho hai route này. Những endpoint/kiểm soát nghiệp vụ khác chưa triển khai. Base `/api/v1`, JSON UTF-8; timestamp ISO 8601 UTC; field camelCase; enum UPPER_SNAKE_CASE (đơn vị C/F). Schema ký hiệu `?` là optional input; `| null` là trường output luôn xuất hiện nhưng có thể thiếu giá trị. Trường output khác đều bắt buộc.
+Trạng thái 25/10/2026: 21 thao tác dưới đây đã triển khai trong Giai đoạn 4; xem [bằng chứng kiểm thử](phase-4.md). Frontend nghiệp vụ chưa tích hợp, thuộc Giai đoạn 5. Base `/api/v1`, JSON UTF-8; timestamp ISO 8601 UTC; field camelCase; enum UPPER_SNAKE_CASE (đơn vị C/F). Schema ký hiệu `?` là optional input; `| null` là trường output luôn xuất hiện nhưng có thể thiếu giá trị. Trường output khác đều bắt buộc.
 
 ## 1. Envelope, validation và errors
 
@@ -27,7 +27,7 @@ Provider trả 401 không biến thành 401 ứng dụng (tránh frontend refres
 
 Global ValidationPipe: transform có kiểm soát, whitelist và forbidNonWhitelisted. Parse UUID cho `:id`; query số phải finite; không chấp nhận chuỗi rỗng thành 0. DTO class-validator/class-transformer; output mapper allowlist riêng, không serialize Prisma User thẳng.
 
-Pagination input: `page` integer >=1 default 1, `pageSize` integer >=1 default 20; favorites max50, history max20. page vượt dữ liệu trả mảng rỗng. Search/forecast không phân trang vì số mốc/kết quả cố định từ nguồn và UI cần toàn bộ dải thời gian.
+Pagination input: `page` integer 1–1.000.000 default 1, `pageSize` integer >=1 default 20; favorites max50, history max20. page vượt dữ liệu trả mảng rỗng. Search/forecast không phân trang vì số mốc/kết quả cố định từ nguồn và UI cần toàn bộ dải thời gian.
 
 ## 2. Schema dùng chung
 
@@ -152,7 +152,7 @@ POST history luôn 200 vì nghiệp vụ “ghi nhận lần chọn”, cả t�
 | GET /health/live | public | 200 `{status:"ok"}` | Tiến trình không đáp ứng |
 | GET /health/ready | public | 200 `{status:"ready"}` nếu DB SELECT1 trong2s | 503 DATABASE_UNAVAILABLE |
 
-Vẫn dùng envelope như các route khác. Health không gọi weather để tránh tiêu quota. Swagger UI `/api/docs`, JSON `/api/docs-json` (không phải nghiệp vụ versioned); bật khi NODE_ENV=development, tắt ở môi trường khác. Swagger đã chạy và phản ánh đúng hai health endpoint trong Giai đoạn 3; Giai đoạn 4 sẽ mở rộng tài liệu cho nghiệp vụ.
+Vẫn dùng envelope như các route khác. Health không gọi weather để tránh tiêu quota. Swagger UI `/api/docs`, JSON `/api/docs-json` (không phải nghiệp vụ versioned); bật khi NODE_ENV=development, tắt ở môi trường khác. Swagger đã có request/response schema cho đủ 21 thao tác. Khi thử mutation ở local, mở qua Vite proxy `http://127.0.0.1:5173/api/docs/` để đúng Origin, lấy CSRF rồi nhập vào header; không cố sửa Origin bị trình duyệt quản lý.
 
 ## 7. Rate limit và retry
 
@@ -170,7 +170,7 @@ Limiter IP không đủ bảo vệ quota provider: áp thêm limiter upstream d�
 
 GET an toàn để người dùng thử lại. Không tự retry mọi lỗi. POST register/login/refresh không an toàn để gửi lại sau network timeout: trạng thái server có thể đã thay đổi. POST favorites lặp trả409, history lặp cập nhật thời gian (không nhân bản nhưng có tác dụng phụ). PATCH password không retry; DELETE cùng id lần hai404, xóa toàn history lần hai204. MVP không nhận Idempotency-Key hoặc hứa exactly-once. 401 từ guard trước controller có thể được client replay một lần sau refresh.
 
-## 8. Ví dụ contract (fixture, không phải API đã chạy)
+## 8. Ví dụ contract (fixture minh họa; không phải dữ liệu trả về tại thời điểm hiện tại)
 
 Request đăng ký sau khi đã lấy CSRF:
 

@@ -1,6 +1,6 @@
 # Thiết kế kiến trúc và dữ liệu
 
-Ngày: 24/10/2026. Baseline thiết kế Giai đoạn 2, đã cập nhật lựa chọn PostgreSQL 18 được người dùng xác nhận trong Giai đoạn 3. Hiện đã có frontend khởi tạo, backend health, Prisma schema/client và cấu hình local; nghiệp vụ trong tài liệu này vẫn là thiết kế chưa triển khai. Xem [báo cáo Giai đoạn 3](phase-3.md) để phân biệt phần đã kiểm tra thực tế.
+Ngày cập nhật: 25/10/2026. Baseline thiết kế Giai đoạn 2, đã triển khai backend Giai đoạn 4 với PostgreSQL 18 được người dùng xác nhận. Xem [báo cáo Giai đoạn 4](phase-4.md) cho bằng chứng kiểm thử và giới hạn. Frontend mới có trang kết nối; UI nghiệp vụ, phối hợp refresh nhiều tab và chuyển đổi nhiệt độ thuộc Giai đoạn 5. Docker/cloud thuộc Giai đoạn 7.
 
 ## 1. Phạm vi và quyết định kiến trúc
 
@@ -63,7 +63,7 @@ GET weather không có tác dụng ghi DB. POST history chỉ gọi sau hành đ
 
 ## 4. Cấu trúc thư mục dự kiến
 
-Cây sau là cấu trúc mục tiêu, không phải danh sách đã tạo đầy đủ. Giai đoạn 3 chỉ tạo phần bootstrap và health; các thư mục nghiệp vụ sẽ được thêm khi triển khai:
+Cây sau là cấu trúc mục tiêu, không phải danh sách đã tạo đầy đủ. Các module backend đã được thêm ở Giai đoạn 4; frontend nghiệp vụ, e2e, Docker và CONTRIBUTING chưa triển khai:
 
 ```text
 weatherApp/
@@ -98,7 +98,7 @@ weatherApp/
 └── CONTRIBUTING.md
 ```
 
-Unit test đặt cạnh service/component. Không thêm generic repository bọc Prisma hoặc chia mọi component nhỏ thành một feature. Các file env thật, node_modules, dist, coverage và artifacts test chứa dữ liệu cá nhân phải được ignore trước khi cài/chạy.
+Backend test hiện đặt trong `backend/test/`, import mã biên dịch `dist` để giữ metadata decorator Nest; Vitest tách unit/HTTP mock và integration PostgreSQL thật. Không thêm generic repository bọc Prisma. Các file env thật, node_modules, dist, coverage và artifacts chứa thông tin cục bộ được ignore.
 
 ## 5. Database và ERD
 
@@ -195,13 +195,13 @@ Cookie production: tên `__Host-wa-access`, `__Host-wa-refresh`, `__Host-wa-csrf
 
 Mọi mutation kiểm tra Origin đúng `APP_ORIGIN`; thiếu Origin chỉ chấp nhận Referer cùng origin hợp lệ, thiếu cả hai thì 403. CORS production không cần bật cho origin ngoài; development dùng Vite proxy nên cũng cùng origin trình duyệt. Swagger/curl gửi Origin và CSRF như client thật. Response auth/users/lists `Cache-Control: no-store`; `/auth/csrf` không cho cross-origin đọc và rate limit.
 
-Nguồn bảo mật đã đối chiếu 24/10/2026: [OWASP CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html), [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Các lựa chọn trên là thiết kế, chưa kiểm thử.
+Nguồn bảo mật đã đối chiếu: [OWASP CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html), [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Backend đã được kiểm thử ở Giai đoạn 4; frontend refresh/Web Locks chưa triển khai. CSRF hết hạn hoặc credential cũ không xác định được phiên có thể trả 403 trước guard xác thực; client cần lấy lại CSRF rồi đăng nhập nếu phiên không còn.
 
 ## 7. OpenWeather, cache và định dạng
 
 - Backend HTTPS tới host OpenWeather cố định trong cấu hình được kiểm tra; không nhận URL từ client, không theo redirect tùy tiện. API key nằm env backend, không trong biến `VITE_*`. Log che query appid, Cookie, Authorization và password.
 - `current`: `/data/2.5/weather`; `forecast`: `/data/2.5/forecast`; `search`: `/geo/1.0/direct`. Thời tiết dùng `units=metric&lang=vi`. Geocoding ưu tiên `local_names.vi`, fallback `name`.
-- Free theo tài liệu: 60 calls/phút, 1.000.000/tháng; geocoding tối đa 5 kết quả. Quyền key tài khoản chưa được thử. Cần smoke test 3 endpoint này sau khi người dùng cấu hình secret cục bộ.
+- Free theo tài liệu: 60 calls/phút, 1.000.000/tháng; geocoding tối đa 5 kết quả. Ngày 25/10/2026 đã gọi thành công cả 3 endpoint với key cục bộ, nhận 40 mốc forecast cách nhau 3 giờ. Không gọi One Call.
 - Timeout 5 giây, không retry tự động upstream trong MVP. Validate cấu trúc/số hữu hạn/timestamp; lỗi cấu trúc trả 502. Missing trường optional thành null, không zero. Không cache lỗi hoặc payload hỏng.
 - TTL current/forecast 10 phút; geocoding 24 giờ (kết quả thành công rỗng cache 60 giây). LRU tối đa 500 key/cache; cache key gồm endpoint, normalized coords/query, language và metric. Cache khác tài khoản dùng chung vì dữ liệu công khai.
 - Single-flight gộp cùng key; flight xóa trong finally khi thành công/lỗi. Cache hit không trừ upstream budget.
@@ -240,6 +240,6 @@ Liveness không phụ thuộc OpenWeather/DB; readiness kiểm tra DB với time
 | 6 | E2E đăng ký → tìm → lưu → lịch sử → logout; hai tài khoản cách ly; DB/upstream down; concurrent mutations; CSRF/session |
 | 7 | Docker từ checkout sạch, migrate deploy riêng trước backend ready, healthchecks, volumes, README/CONTRIBUTING, cloud HTTPS và kiểm tra secret |
 
-Unit: Vitest, mock OpenWeather. Backend API: Supertest và DB test riêng. Frontend: Vitest + Testing Library vì cần kiểm tra race tìm kiếm, loading và chuyển đơn vị. E2E: Playwright vì cookie/proxy/responsive không thể chứng minh chỉ bằng unit test. Chưa cài các công cụ này.
+Unit backend: Vitest mock OpenWeather; API: Supertest và DB test riêng, đã cài và chạy. Frontend dự kiến Vitest + Testing Library để kiểm tra race tìm kiếm/loading/chuyển đơn vị; E2E dự kiến Playwright cho cookie/proxy/responsive, chưa cài công cụ frontend/E2E.
 
-Kiểm tra Giai đoạn 2 chỉ kiểm tra tài liệu, không thay thế build/test runtime. Dừng tại bàn giao thiết kế trong lượt này theo yêu cầu học theo giai đoạn; không đòi xác nhận lại các quyết định đã được chấp thuận.
+Mỗi giai đoạn có báo cáo riêng, phân biệt tiêu chí thiết kế và kết quả runtime. Giai đoạn 4 đã đạt các điều kiện trên; Giai đoạn 5–7 vẫn là công việc tiếp theo, chưa được tuyên bố hoàn thành.
