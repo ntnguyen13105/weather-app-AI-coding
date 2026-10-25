@@ -42,6 +42,7 @@ export function Layout() {
           ) : (
             <Link
               className="account-link"
+              aria-label={user ? 'Tài khoản' : 'Đăng nhập'}
               to={user ? '/tai-khoan' : '/dang-nhap'}
             >
               <Icon name="user" />

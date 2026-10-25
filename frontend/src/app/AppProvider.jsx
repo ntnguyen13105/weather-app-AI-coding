@@ -5,6 +5,7 @@ import { readUnit, saveUnit, locationInput } from '../lib/format.js';
 
 export function AppProvider({ children }) {
   const sessionRevision = useRef(0);
+  const sessionChannel = useRef(null);
   const [session, setSession] = useState({
     status: 'loading',
     user: null,
@@ -39,6 +40,22 @@ export function AppProvider({ children }) {
     window.addEventListener('focus', loadSession);
     return () => window.removeEventListener('focus', loadSession);
   }, [loadSession]);
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('weather-session-events');
+    sessionChannel.current = channel;
+    channel.onmessage = ({ data }) => {
+      if (data === 'logout') {
+        sessionRevision.current++;
+        setHistoryFailure(null);
+        setSession({ status: 'guest', user: null, error: null });
+      } else if (data === 'changed') void loadSession();
+    };
+    return () => {
+      sessionChannel.current = null;
+      channel.close();
+    };
+  }, [loadSession]);
   useEffect(
     () =>
       api.onExpired(() => {
@@ -61,6 +78,7 @@ export function AppProvider({ children }) {
     setHistoryFailure(null);
     setSession({ status: 'authenticated', user, error: null });
     setNotice('');
+    sessionChannel.current?.postMessage('changed');
   }
   async function updateProfile(body) {
     const result = await api.request('/users/me', {
@@ -85,6 +103,7 @@ export function AppProvider({ children }) {
     setGuestUnit(unit);
     setSession({ status: 'guest', user: null, error: null });
     setNotice(message);
+    sessionChannel.current?.postMessage('logout');
   }
   async function logout() {
     await api.request('/auth/logout', { method: 'POST' });
