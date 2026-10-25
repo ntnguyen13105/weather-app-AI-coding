@@ -21,7 +21,8 @@
     "db:check": "npm run build && node dist/prisma/check-connection.js",
     "test:integration": "npm run build && node test/run-integration.mjs",
     "migrate:deploy": "prisma migrate deploy",
-    "migrate:status": "prisma migrate status"
+    "migrate:status": "prisma migrate status",
+    "test:weather-live": "npm run build && node test/weather-live.mjs"
   },
   "dependencies": {
     "@nestjs/common": "12.2.0",

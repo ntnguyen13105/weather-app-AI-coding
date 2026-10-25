@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { FavoritesModule } from './modules/favorites/favorites.module.js';
 import { SearchHistoryModule } from './modules/search-history/search-history.module.js';
+import { WeatherModule } from './modules/weather/weather.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SearchHistoryModule } from './modules/search-history/search-history.mod
     UsersModule,
     FavoritesModule,
     SearchHistoryModule,
+    WeatherModule,
   ],
 })
 export class AppModule {}
