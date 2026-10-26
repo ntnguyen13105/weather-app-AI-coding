@@ -30,27 +30,27 @@ docker compose --env-file .env.docker up -d --build --wait
 node frontend/e2e/docker-smoke.mjs
 ```
 
-Script init chỉ chạy lần đầu. Mở http://localhost:8080. Nếu đã có `.env.docker`, dùng lại và kiểm tra key trong file. Dừng bằng `docker compose --env-file .env.docker down` (không thêm `-v`). Lệnh HTTPS local, cloud, migration và backup đầy đủ nằm trong `deployment.md`.
+Script init chỉ chạy lần đầu. Mở <http://localhost:8080>. Nếu đã có `.env.docker`, dùng lại và kiểm tra key trong file. Dừng bằng `docker compose --env-file .env.docker down` (không thêm `-v`). Lệnh HTTPS local, cloud, migration và backup đầy đủ nằm trong `deployment.md`.
 
 ## 4. Cách kiểm thử và bằng chứng
 
-| Kiểm tra | Kết quả thực tế |
-| --- | --- |
-| Docker Engine/Compose | 29.9.2 / 5.6.1, Linux Engine trên Docker Desktop |
-| Node/PostgreSQL/Caddy container | Node 24.21.0, PostgreSQL 18.6, Caddy 2.11.7 |
-| Build image | Frontend, runtime backend và migrate thành công |
-| Khởi động/health | DB, backend, frontend healthy; migrate Exited(0) |
-| Migration | 1 migration, schema up to date; chạy lại không áp dụng trùng |
-| HTTP Docker | Register → weather thật/forecast → favorite → reload → logout đạt, không lỗi JS |
-| HTTPS local production | Cùng luồng đạt; cookie __Host-/Secure/HttpOnly/SameSite=Lax; HSTS/CSP; Swagger 404 |
-| Backup/restore | pg_dump custom, pg_restore vào DB kiểm thử mới; đủ 5 bảng; DB restore test đã xóa |
-| Backend | 41 unit/HTTP test đạt, bao gồm 3 test proxy mới |
-| PostgreSQL local | 12 integration test đạt sau khi khởi động cluster local |
-| Frontend | 12 unit/component test đạt |
-| E2E cuối | 5/5 đạt trong khoảng 1.2 phút, gồm cửa sổ nghỉ quota 60 giây |
-| Lint/format | Backend và frontend đạt; không hạ ngưỡng kiểm tra |
-| Secret | Không tìm thấy giá trị secret đang cấu hình trong file dự kiến track hoặc Git history; image runtime không có `.env` hoặc weather key baked-in |
-| Cloud manifest | `config --quiet` đạt với placeholder; chưa deploy managed DB/domain |
+| Kiểm tra                        | Kết quả thực tế                                                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docker Engine/Compose           | 29.9.2 / 5.6.1, Linux Engine trên Docker Desktop                                                                                               |
+| Node/PostgreSQL/Caddy container | Node 24.21.0, PostgreSQL 18.6, Caddy 2.11.7                                                                                                    |
+| Build image                     | Frontend, runtime backend và migrate thành công                                                                                                |
+| Khởi động/health                | DB, backend, frontend healthy; migrate Exited(0)                                                                                               |
+| Migration                       | 1 migration, schema up to date; chạy lại không áp dụng trùng                                                                                   |
+| HTTP Docker                     | Register → weather thật/forecast → favorite → reload → logout đạt, không lỗi JS                                                                |
+| HTTPS local production          | Cùng luồng đạt; cookie \_\_Host-/Secure/HttpOnly/SameSite=Lax; HSTS/CSP; Swagger 404                                                           |
+| Backup/restore                  | pg_dump custom, pg_restore vào DB kiểm thử mới; đủ 5 bảng; DB restore test đã xóa                                                              |
+| Backend                         | 41 unit/HTTP test đạt, bao gồm 3 test proxy mới                                                                                                |
+| PostgreSQL local                | 12 integration test đạt sau khi khởi động cluster local                                                                                        |
+| Frontend                        | 12 unit/component test đạt                                                                                                                     |
+| E2E cuối                        | 5/5 đạt trong khoảng 1.2 phút, gồm cửa sổ nghỉ quota 60 giây                                                                                   |
+| Lint/format                     | Backend và frontend đạt; không hạ ngưỡng kiểm tra                                                                                              |
+| Secret                          | Không tìm thấy giá trị secret đang cấu hình trong file dự kiến track hoặc Git history; image runtime không có `.env` hoặc weather key baked-in |
+| Cloud manifest                  | `config --quiet` đạt với placeholder; chưa deploy managed DB/domain                                                                            |
 
 Kiểm tra secret ở đây đối chiếu các giá trị đang cấu hình, không phải công cụ phát hiện mọi loại secret. Kiểm tra HTTPS local chấp nhận CA nội bộ trong test browser, không xác minh CA public. Backup được giữ trong `.local/backups` (Git ignore). Sau kiểm tra, stack được trả về HTTP local bình thường.
 
