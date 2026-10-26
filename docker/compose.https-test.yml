@@ -1,0 +1,9 @@
+# Local production-mode check only. Caddy uses its internal CA for localhost.
+services:
+  backend:
+    environment:
+      NODE_ENV: production
+      APP_ORIGIN: https://localhost:8443
+  frontend:
+    environment:
+      SITE_ADDRESS: https://localhost

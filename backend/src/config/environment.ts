@@ -1,8 +1,11 @@
 import 'reflect-metadata';
+import { isIP } from 'node:net';
 import { plainToInstance, Transform } from 'class-transformer';
 import { IsIn, IsInt, IsString, Max, Min, validateSync } from 'class-validator';
 
 class Environment {
+  @IsString()
+  TRUST_PROXY_IP: string = '';
   @IsIn(['development', 'test', 'production'])
   NODE_ENV: string = 'development';
 
@@ -38,6 +41,7 @@ export function validateEnvironment(
 ): Environment {
   // Only copy known keys: process.env contains many unrelated OS settings.
   const keys = [
+    'TRUST_PROXY_IP',
     'NODE_ENV',
     'PORT',
     'HOST',
@@ -56,6 +60,8 @@ export function validateEnvironment(
     ),
   );
   const invalid = new Set(validateSync(config).map((error) => error.property));
+  if (config.TRUST_PROXY_IP && !isIP(config.TRUST_PROXY_IP))
+    invalid.add('TRUST_PROXY_IP');
   try {
     const db = new URL(config.DATABASE_URL);
     if (

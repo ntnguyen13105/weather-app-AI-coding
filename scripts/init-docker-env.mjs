@@ -1,0 +1,13 @@
+import { randomBytes } from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
+const target = new URL('../.env.docker', import.meta.url);
+if (existsSync(target)) throw new Error('.env.docker đã tồn tại; không ghi đè secret hoặc mật khẩu volume.');
+const local = new URL('../.env', import.meta.url);
+const key = existsSync(local) ? parseEnv(readFileSync(local, 'utf8')).OPENWEATHER_API_KEY ?? '' : '';
+if (key && !/^[a-zA-Z0-9]+$/.test(key)) throw new Error('API key không hợp lệ; cấu hình thủ công trong .env.docker.');
+let template = readFileSync(new URL('../docker/.env.example', import.meta.url), 'utf8');
+for (const name of ['POSTGRES_ADMIN_PASSWORD', 'APP_DB_PASSWORD', 'JWT_SECRET', 'CSRF_SECRET']) template = template.replace(`${name}=`, `${name}=${randomBytes(32).toString('hex')}`);
+template = template.replace('OPENWEATHER_API_KEY=', `OPENWEATHER_API_KEY=${key}`);
+writeFileSync(target, template, { flag: 'wx', mode: 0o600 });
+console.log('Đã tạo .env.docker với secret riêng; không in hoặc commit nội dung file.');

@@ -1,0 +1,79 @@
+name: weather-app
+services:
+  db:
+    image: postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5
+    environment:
+      POSTGRES_USER: weather_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Run init-docker-env.mjs}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Run init-docker-env.mjs}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/postgres/init-app.sh:/docker-entrypoint-initdb.d/10-app.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U weather_admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks: [private]
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://weather_app:${APP_DB_PASSWORD:?Required}@db:5432/weather_app?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks: [private]
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: runtime
+    environment:
+      NODE_ENV: ${APP_ENV:-development}
+      HOST: 0.0.0.0
+      PORT: 3000
+      APP_ORIGIN: ${DOCKER_APP_ORIGIN:-http://localhost:8080}
+      DATABASE_URL: postgresql://weather_app:${APP_DB_PASSWORD:?Required}@db:5432/weather_app?schema=public
+      JWT_SECRET: ${JWT_SECRET:?Required}
+      CSRF_SECRET: ${CSRF_SECRET:?Required}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      TRUST_PROXY_IP: 172.30.77.10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    networks: [private]
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+      - "${HTTPS_BIND:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      private:
+        ipv4_address: 172.30.77.10
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+networks:
+  private:
+    ipam:
+      config:
+        - subnet: 172.30.77.0/24

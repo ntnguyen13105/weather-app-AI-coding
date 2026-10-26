@@ -11,6 +11,11 @@ import { configureHttp } from './common/http.js';
 import { describeResponses } from './common/openapi.js';
 
 export function configureApp(app: INestApplication) {
+  const proxy = app.get(ConfigService).get<string>('TRUST_PROXY_IP');
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .set('trust proxy', proxy ? [proxy] : false);
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
   configureHttp(app);

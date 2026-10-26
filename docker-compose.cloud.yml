@@ -1,0 +1,60 @@
+# Single-host cloud deployment with an external managed PostgreSQL database.
+name: weather-app-cloud
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Managed PostgreSQL URL required}
+    restart: "no"
+    networks: [private]
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: runtime
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      APP_ORIGIN: https://${DOMAIN:?Public domain required}
+      DATABASE_URL: ${DATABASE_URL:?Managed PostgreSQL URL required}
+      JWT_SECRET: ${JWT_SECRET:?Required}
+      CSRF_SECRET: ${CSRF_SECRET:?Required}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:?Required}
+      TRUST_PROXY_IP: 172.30.77.10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    networks: [private]
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      SITE_ADDRESS: ${DOMAIN:?Public domain required}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      private:
+        ipv4_address: 172.30.77.10
+volumes:
+  caddy_data:
+  caddy_config:
+networks:
+  private:
+    ipam:
+      config:
+        - subnet: 172.30.77.0/24
