@@ -3,8 +3,9 @@ test('real weather, units, keyboard search and responsive layout', async ({
   page,
 }) => {
   test.setTimeout(120000);
-  // The preceding security/account scenarios can exhaust the unchanged IP
-  // quota. Respect Retry-After once before starting this independent scenario.
+  // Account/security scenarios share this server's IP budget. Start the weather
+  // scenario in a fresh 60-second window; do not weaken production rate limits.
+  await new Promise((resolve) => setTimeout(resolve, 60000));
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1000 });

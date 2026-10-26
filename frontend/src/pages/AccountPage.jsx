@@ -97,7 +97,6 @@ function AccountForms() {
     setError(null);
     try {
       await logout();
-      navigate('/');
     } catch (e) {
       setError(e);
     } finally {

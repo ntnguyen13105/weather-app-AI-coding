@@ -50,6 +50,7 @@ test('account, persisted favorites, history, profile and password', async ({
       .click();
     await expect(page.getByText('Đã lưu thông tin của bạn.')).toBeVisible();
     await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+    await expect(page).toHaveURL('/dang-nhap');
     await page.goto('/dang-nhap');
     await page.getByLabel('Email', { exact: true }).fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
