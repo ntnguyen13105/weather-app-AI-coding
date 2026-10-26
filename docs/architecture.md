@@ -1,6 +1,6 @@
 # Thiết kế kiến trúc và dữ liệu
 
-Ngày cập nhật: 25/10/2026. Baseline thiết kế Giai đoạn 2, đã triển khai backend Giai đoạn 4 với PostgreSQL 18 được người dùng xác nhận. Xem [báo cáo Giai đoạn 4](phase-4.md) cho bằng chứng kiểm thử và giới hạn. Frontend mới có trang kết nối; UI nghiệp vụ, phối hợp refresh nhiều tab và chuyển đổi nhiệt độ thuộc Giai đoạn 5. Docker/cloud thuộc Giai đoạn 7.
+Ngày cập nhật trạng thái: 26/10/2026. Tài liệu giữ baseline thiết kế Giai đoạn 2 và mô hình dữ liệu đã triển khai. Backend, frontend nghiệp vụ, phối hợp phiên nhiều tab và chuyển đổi nhiệt độ đã hoàn thành; Docker đã chạy thật, cloud mới có cấu hình/hướng dẫn. Xem [Giai đoạn 6](phase-6.md), [Giai đoạn 7](phase-7.md) và [sơ đồ triển khai](deployment.md) cho bằng chứng và giới hạn hiện tại. Reverse proxy Docker chỉ được backend tin qua `TRUST_PROXY_IP` cụ thể; local trực tiếp để trống.
 
 ## 1. Phạm vi và quyết định kiến trúc
 

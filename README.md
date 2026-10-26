@@ -2,7 +2,7 @@
 
 Ứng dụng thời tiết tiếng Việt dùng React/JavaScript, NestJS/TypeScript, Prisma và PostgreSQL, phát triển theo từng giai đoạn để học và làm portfolio.
 
-**Trạng thái ngày 25/10/2026: đã triển khai và kiểm thử tích hợp Giai đoạn 6.** Dashboard tiếng Việt kết nối NestJS, PostgreSQL và OpenWeather thật; có tìm kiếm, dự báo, đổi đơn vị, tài khoản, yêu thích và lịch sử. Đã sửa đồng bộ đăng xuất đa tab và tên truy cập liên kết mobile. Không có số liệu thời tiết demo. Đóng gói Docker/cloud và bàn giao cuối thuộc Giai đoạn 7; chưa triển khai production.
+**Trạng thái ngày 26/10/2026: đã bàn giao Giai đoạn 7 trong phạm vi local/Docker.** Dashboard tiếng Việt kết nối NestJS, PostgreSQL và OpenWeather thật; có tìm kiếm, dự báo, đổi đơn vị, tài khoản, yêu thích và lịch sử. Docker và HTTPS local production-mode đã kiểm thử. Có hướng dẫn cloud/GitHub; chưa deploy cloud hoặc push GitHub. Không có số liệu thời tiết demo.
 
 ![Dashboard với dữ liệu OpenWeather thật](docs/screenshots/phase-5-1440.png)
 
@@ -14,7 +14,8 @@
 - OpenWeather Free: tìm địa điểm, thời tiết hiện tại, dự báo 5 ngày/mốc 3 giờ, cache và timeout. Cảnh báo trả `UNSUPPORTED`.
 - Yêu thích tối đa 50, lịch sử tối đa 20/tài khoản, chống trùng và kiểm tra quyền sở hữu. Đã áp dụng migration bốn bảng với khóa ngoại, unique, index và CHECK tọa độ.
 - PostgreSQL 18 chạy trong cluster riêng `.local/postgres` trên cổng 55432; tài khoản ứng dụng không có quyền superuser/createdb/createrole.
-- ESLint, Prettier, package-lock, kiểm tra cấu hình môi trường; 38 unit/HTTP test và 12 integration test PostgreSQL thật đã đạt.
+- ESLint, Prettier, package-lock, kiểm tra cấu hình môi trường; 41 unit/HTTP test và 12 integration test PostgreSQL thật đã đạt.
+- Docker multi-stage, Caddy reverse proxy cùng origin, health checks, migration job, volume PostgreSQL và hướng dẫn backup/restore.
 
 ## Phiên bản đã chạy
 
@@ -29,7 +30,19 @@
 | ESLint / Prettier / Vitest | 10.13.0 / 3.9.10 / 5.0.5 |
 | jose / argon2 / cookie | 6.2.13 / 0.45.1 / 2.0.1 |
 
-Người dùng đã đồng ý dùng PostgreSQL 18 có sẵn thay cho 17 trong thiết kế ban đầu. Node 24.21.0 đáp ứng dependency, nhưng cần cập nhật bản vá LTS trước public launch. Docker chưa được cài/kiểm chứng; Compose đầy đủ thuộc Giai đoạn 7.
+Người dùng đã đồng ý dùng PostgreSQL 18 có sẵn thay cho 17 trong thiết kế ban đầu. Docker đã kiểm tra với Engine 29.9.2, Compose 5.6.1, PostgreSQL 18.6 và Caddy 2.11.7. Base image được khóa digest. Review bản vá và chạy lại kiểm thử trước mỗi lần public launch; không nâng major theo thông báo npm/Prisma tự động.
+
+## Chạy nhanh bằng Docker
+
+Cần Docker Desktop Linux Engine đang chạy. Từ thư mục repository:
+
+```powershell
+node scripts/init-docker-env.mjs
+# Điền OpenWeather key vào .env.docker nếu chưa có key trong .env local
+docker compose --env-file .env.docker up -d --build --wait
+```
+
+Mở **http://localhost:8080**. Script init chỉ chạy lần đầu và từ chối ghi đè file secret đã có. Docker dùng database/volume riêng, không đụng cluster local 55432. Xem [hướng dẫn Docker/cloud](docs/deployment.md) cho migration, HTTPS, sao lưu và xử lý lỗi. Dừng bằng `docker compose --env-file .env.docker down`, không thêm `-v` nếu muốn giữ dữ liệu.
 
 ## Chạy local trên Windows
 
@@ -86,7 +99,7 @@ npm --prefix .\frontend run dev
 - Swagger cùng origin: [http://127.0.0.1:5173/api/docs/](http://127.0.0.1:5173/api/docs/). Khi thử mutation, dùng trang này để Origin khớp APP_ORIGIN; lấy CSRF qua `/auth/csrf`, copy `data.csrfToken` vào header của thao tác cần chạy. Sau login/refresh dùng CSRF mới trả về.
 - Tìm “Hà Nội”, chọn kết quả; dashboard hiển thị thời tiết hiện tại và dự báo. Đăng ký tài khoản để lưu địa điểm và lịch sử.
 
-Backend đọc `.env` ở gốc. Vite proxy `/api` theo BACKEND_URL; không đưa DATABASE_URL hoặc secret vào biến `VITE_*`. JWT/CSRF secret bắt buộc ở mọi môi trường. Local thiếu OpenWeather key vẫn chạy auth/health, nhưng weather trả 503; production yêu cầu cả key và APP_ORIGIN HTTPS. Chưa triển khai public hoặc cấu hình cloud/Docker.
+Backend đọc `.env` ở gốc. Vite proxy `/api` theo BACKEND_URL; không đưa DATABASE_URL hoặc secret vào biến `VITE_*`. JWT/CSRF secret bắt buộc ở mọi môi trường. Local thiếu OpenWeather key vẫn chạy auth/health, nhưng weather trả 503; production yêu cầu cả key và APP_ORIGIN HTTPS. Docker dùng `.env.docker` riêng. Chưa triển khai public.
 
 Ctrl+C trong mỗi terminal dừng server tương ứng. Dừng database riêng khi không dùng:
 
@@ -109,7 +122,7 @@ npm --prefix .\frontend run build
 npm --prefix .\frontend test
 ```
 
-`backend test` tự build rồi chạy 38 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Frontend có 12 test Vitest/Testing Library và 5 bài Playwright trên Chrome; xem điều kiện chạy, phân biệt mock/live và giới hạn ở [Giai đoạn 6](docs/phase-6.md).
+`backend test` tự build rồi chạy 41 test, mock OpenWeather và DB khi phù hợp. `test:integration` tự tạo database **weather_app_test** trên cluster riêng cổng 55432, áp dụng migration, chạy 12 test và xóa user test do chính lượt chạy tạo; không dùng database ứng dụng. Runner này chỉ hỗ trợ thiết lập local bằng script hiện có. `db:check` chỉ SELECT 1. Frontend có 12 test Vitest/Testing Library và 5 bài Playwright trên Chrome; xem điều kiện chạy, phân biệt mock/live và giới hạn ở [Giai đoạn 6](docs/phase-6.md). E2E có nghỉ 60 giây trước bài thời tiết để tránh sử dụng hết quota IP bởi các bài tài khoản; không tắt rate limiting. Smoke container: `node frontend/e2e/docker-smoke.mjs`.
 
 `npm --prefix .\frontend run test:e2e` tự build backend và bật/tắt server test riêng 3001/5174, giữ nguyên rate limit; cần Chrome, PostgreSQL đang chạy và OpenWeather key hợp lệ. Có thể chờ tối đa một phút theo Retry-After. Muốn kiểm tra dừng/khởi động lại database thật, xem cờ `PHASE6_DB_OUTAGE` trong báo cáo Giai đoạn 6.
 
@@ -138,8 +151,12 @@ OpenWeather **Free**: thời tiết hiện tại, tìm kiếm geocoding và dự
 - [Báo cáo Giai đoạn 4, lệnh kiểm thử và giới hạn](docs/phase-4.md).
 - [Báo cáo Giai đoạn 5, kiểm thử giao diện và ảnh chụp](docs/phase-5.md).
 - [Báo cáo Giai đoạn 6, lỗi đã sửa và giới hạn nghiệm thu](docs/phase-6.md).
+- [Báo cáo Giai đoạn 7 và checklist nghiệm thu](docs/phase-7.md).
+- [Docker, cloud, backup và rollback](docs/deployment.md).
+- [Chuẩn bị GitHub và nội dung portfolio](docs/github-handoff.md).
+- [Quy tắc đóng góp](CONTRIBUTING.md).
 - [Kiến trúc và ERD](docs/architecture.md).
 - [API contract](docs/api-contract.md) — request/response, CSRF, pagination và lỗi.
 - [Wireframe và quy tắc giao diện](docs/ui-design.md) — dashboard thuộc Giai đoạn 5.
 
-Git local dùng `main`, `develop`, `feature/*`; Giai đoạn 6 ở `feature/integration-testing`, kế thừa `feature/frontend`. Chưa tạo GitHub remote hoặc push. Bước tiếp theo là Giai đoạn 7: Docker, hướng dẫn cloud, CONTRIBUTING và checklist bàn giao.
+Git local dùng `main`, `develop`, `feature/*`; bản bàn giao ở `feature/deployment`, kế thừa `feature/integration-testing`. Theo lựa chọn người dùng, chỉ chuẩn bị local và hướng dẫn push; chưa tạo GitHub remote, chưa push và chưa deploy cloud. Xem hướng dẫn GitHub để review/fast-forward vào nhánh ổn định trước khi công bố.
