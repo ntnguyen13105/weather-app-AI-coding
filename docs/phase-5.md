@@ -2,8 +2,6 @@
 
 Ngày thực hiện: 25/10/2026. React JavaScript, CSS thuần; không thay đổi stack.
 
-**Cập nhật sau Giai đoạn 6:** kết quả 11 unit/2 E2E bên dưới là bằng chứng tại thời điểm Giai đoạn 5. Bộ hiện tại có 12 unit/5 E2E; Playwright tự khởi động server riêng 3001/5174 và không cần server 3000/5173 đang chạy. Xem `phase-6.md` cho lệnh và điều kiện hiện tại; ảnh test mới ghi vào thư mục `test-results/`, không ghi đè ảnh báo cáo này.
-
 ## 1. Công việc đã triển khai
 
 - Dashboard kính mờ tiếng Việt, nền thay đổi theo dữ liệu thời tiết, responsive; icon SVG nhất quán, focus bàn phím và reduced motion.
@@ -43,7 +41,7 @@ Giữ terminal backend mở, mở terminal thứ hai:
 npm --prefix .\frontend run dev
 ```
 
-Truy cập http://127.0.0.1:5173. `.env` cần OpenWeather key hợp lệ, APP_ORIGIN khớp địa chỉ này. Không gửi nội dung `.env` lên chat/Git.
+Truy cập <http://127.0.0.1:5173>. `.env` cần OpenWeather key hợp lệ, APP_ORIGIN khớp địa chỉ này. Không gửi nội dung `.env` lên chat/Git.
 
 ## 4. Cách kiểm thử và kết quả
 
